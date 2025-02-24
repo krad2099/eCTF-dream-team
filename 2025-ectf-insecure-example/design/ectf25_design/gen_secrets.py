@@ -1,18 +1,8 @@
-"""
-Author: Ben Janis
-Date: 2025
-
-This source file is part of an example system for MITRE's 2025 Embedded System CTF
-(eCTF). This code is being provided only for educational purposes for the 2025 MITRE
-eCTF competition, and may not meet MITRE standards for quality. Use this code at your
-own risk!
-
-Copyright: Copyright (c) 2025 The MITRE Corporation
-"""
-
 import argparse
 import json
 from pathlib import Path
+import os
+import binascii
 
 from loguru import logger
 
@@ -32,12 +22,15 @@ def gen_secrets(channels: list[int]) -> bytes:
     # TODO: Update this function to generate any system-wide secrets needed by
     #   your design
 
-    # Create the secrets object
+    # Generate a random 32-byte secret and encode it as a hex string.
+    secret_key = binascii.hexlify(os.urandom(32)).decode()
+
+    # Create the secrets object.
     # You can change this to generate any secret material
     # The secrets file will never be shared with attackers
     secrets = {
         "channels": channels,
-        "some_secrets": "EXAMPLE",
+        "some_secrets": secret_key,
     }
 
     # NOTE: if you choose to use JSON for your file type, you will not be able to
