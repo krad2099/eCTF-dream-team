@@ -1,19 +1,10 @@
-"""
-Author: Ben Janis
-Date: 2025
-
-This source file is part of an example system for MITRE's 2025 Embedded System CTF
-(eCTF). This code is being provided only for educational purposes for the 2025 MITRE
-eCTF competition, and may not meet MITRE standards for quality. Use this code at your
-own risk!
-
-Copyright: Copyright (c) 2025 The MITRE Corporation
-"""
-
 import argparse
 import json
 from pathlib import Path
 import struct
+import binascii
+import hmac
+import hashlib
 
 from loguru import logger
 
@@ -37,13 +28,14 @@ def gen_subscription(
     # Load the json of the secrets file
     secrets = json.loads(secrets)
 
-    # You can use secrets generated using `gen_secrets` here like:
-    # secrets["some_secrets"]
-    # Which would return "EXAMPLE" in the reference design.
-    # Please note that the secrets are READ ONLY at this sage!
+    # Retrieve and decode the secret key for HMAC from the secrets file.
+    key = binascii.unhexlify(secrets["some_secrets"])
 
     # Pack the subscription. This will be sent to the decoder with ectf25.tv.subscribe
-    return struct.pack("<IQQI", device_id, start, end, channel)
+    data = struct.pack("<IQQI", device_id, start, end, channel)
+    # Append an HMAC signature for authenticity.
+    signature = hmac.new(key, data, hashlib.sha256).digest()
+    return data + signature
 
 
 def parse_args():
