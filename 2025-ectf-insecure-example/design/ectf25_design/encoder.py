@@ -1,18 +1,9 @@
-"""
-Author: Ben Janis
-Date: 2025
-
-This source file is part of an example system for MITRE's 2025 Embedded System CTF
-(eCTF). This code is being provided only for educational purposes for the 2025 MITRE
-eCTF competition, and may not meet MITRE standards for quality. Use this code at your
-own risk!
-
-Copyright: Copyright (c) 2025 The MITRE Corporation
-"""
-
 import argparse
 import struct
 import json
+import binascii
+import hmac
+import hashlib
 
 
 class Encoder:
@@ -30,8 +21,12 @@ class Encoder:
         secrets = json.loads(secrets)
 
         # Load the example secrets for use in Encoder.encode
-        # This will be "EXAMPLE" in the reference design"
+        # This will be "EXAMPLE" in the reference design
         self.some_secrets = secrets["some_secrets"]
+
+        # Precompute the HMAC key from the secret.
+        # This converts the hex-encoded secret into raw bytes for HMAC.
+        self.hmac_key = binascii.unhexlify(self.some_secrets)
 
     def encode(self, channel: int, frame: bytes, timestamp: int) -> bytes:
         """The frame encoder function
@@ -54,7 +49,10 @@ class Encoder:
         # TODO: encode the satellite frames so that they meet functional and
         #  security requirements
 
-        return struct.pack("<IQ", channel, timestamp) + frame
+        header = struct.pack("<IQ", channel, timestamp)
+        payload = header + frame
+        signature = hmac.new(self.hmac_key, payload, hashlib.sha256).digest()
+        return payload + signature
 
 
 def main():
